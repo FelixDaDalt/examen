@@ -1,0 +1,152 @@
+
+<script type="text/javascript">
+const ruta = "https://19ee-181-230-219-190.ngrok.io/"
+
+function promiseGet(url,data) {
+    return new Promise(function (resolve, reject) {
+        var request = new XMLHttpRequest()
+        request.open('GET', ruta + url)
+        request.responseType = 'json'
+        request.onload = function () {
+                if (request.status == 200) {
+                    resolve(request.response)
+                } else {
+                    reject(Error(request.statusText))
+            }
+
+        }
+        request.onerror = function () {
+            reject(Error('Error: unexpected network error.'))
+        }
+        request.send(data)
+    })
+   
+}
+
+function promisePost(url,data){
+    return new Promise(function(resolve, reject) {
+                var request = new XMLHttpRequest()
+                request.open('POST', ruta+url)
+                request.setRequestHeader('Content-Type', 'application/json')
+                request.onload = function() {
+                    if (request.status == 200) {
+                        resolve(request.response)
+                    } else {
+                        reject(Error(request.statusText))
+                    }
+                }
+                request.onerror = function() {
+                    reject(Error('Error: unexpected network error.'))
+                }
+                request.send(data)
+            })
+        }
+
+function mostrarlista(){
+    promiseGet('student/getAll').then(response=>{
+            var tbody = document.querySelector('tbody')
+            tbody.innerHTML = ''
+            response.forEach(e => {
+                    var row = tbody.insertRow()
+                    var id = row.insertCell()
+                    id.innerHTML = e.id
+                    var dni = row.insertCell()
+                    dni.innerHTML = e.dni
+                    var lastName = row.insertCell()
+                    lastName.innerHTML = e.lastName
+                    var firstName = row.insertCell()
+                    firstName.innerHTML = e.firstName
+                    var email = row.insertCell()
+                    email.innerHTML = e.email
+                    var persona = JSON.stringify({
+                        'id': e.id,
+                        'dni': e.dni,
+                        'lastName': e.lastName,
+                        'firstName': e.firstName,
+                        'email': e.email,
+                    })
+                    var view = row.insertCell()
+                    view.innerHTML = `<button onclick='viewPerson(${persona})'>View</button>`
+                    var del = row.insertCell()
+                    del.innerHTML = `<button onclick='deletePerson(${e.id})'>Delete</button>`
+    });
+})
+} 
+
+function deletePerson(id){
+        promisePost(`student/${id}/delete`).then(response=>{
+            mostrarlista()
+        }).catch(reason => {
+                console.error(reason)
+        })
+    }
+
+function createPerson(){
+    var tbody = document.querySelector('tbody')
+    var row = tbody.insertRow()
+                    var id = row.insertCell()
+                    id.innerHTML = ''
+                    var dni = row.insertCell()
+                    dni.innerHTML = '<input type="number" id="newDni" class="form-control" id="inputDni" required>'
+                    var lastName = row.insertCell()
+                    lastName.innerHTML = '<input type="text" id="newApellido" class="form-control" id="inputApellido" required>'
+                    var firstName = row.insertCell()
+                    firstName.innerHTML = '<input type="text" id="newNombre" class="form-control" id="inputNombre" required>'
+                    var email = row.insertCell()
+                    email.innerHTML = '<input type="text" id="newEmail" class="form-control" id="inputEmail" required>'
+                    var accion = row.insertCell()
+                    accion.innerHTML = `<button class='btn btn-success' onclick='postPerson()'><i class='bi bi-check-circle'>AGREGAR</i></button>`
+      
+}
+
+function postPerson(){
+        var dni = document.getElementById("newDni").value
+        var nombre = document.getElementById("newNombre").value
+        var apellido = document.getElementById("newApellido").value
+        var email = document.getElementById("newEmail").value
+
+        if(dni != '' && nombre!='' && apellido!='' && email != '')
+        {
+            var person = JSON.stringify({
+                'dni':dni,
+                'lastname':apellido,
+                'firstname':nombre,
+                'email':email,
+                'cohort': '0',
+                'status': 'activo',
+                'gender': 'masculino',
+                'address': 'abc123',
+                'phone': '000' 
+            })
+            console.log(person)
+            promisePost('student',person).then(response=>{
+                mostrarlista()
+            }).catch(reason => {
+                console.error(reason)
+        })
+
+        }
+}
+</script>
+
+<link href='https://getbootstrap.com/docs/4.0/dist/css/bootstrap.min.css' rel='stylesheet' integrity='sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm' crossorigin='anonymous'>
+
+<body onload=mostrarlista()>
+<div class="col-md-12" ><button type="button" class="btn btn-labeled btn-success" style = "float: rigth" onclick=createPerson()>
+<span class="btn-label"><i class="bi bi-plus-circle"></i></span>Agregar</button>
+<table id='dataTable' class='table'>
+    <thead class='thead-dark'>
+      <tr>
+        <th scope='col'>#</th>
+        <th scope='col'>DNI</th>
+        <th scope='col'>APELLIDO</th>
+        <th scope='col'>NOMBRE</th>
+        <th scope='col'>EMAIL</th>
+        <th scope='col'>ACCIONES</th>
+      </tr>
+    </thead>
+    <tbody>
+    </tbody>
+  </table>
+</div>
+</body>
